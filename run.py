@@ -33,10 +33,12 @@ def get_fast_md5(file_path):
         print(f"[错误] 无法计算哈希 {file_path}: {e}")
         return None
 
-def scan_source(source_dir, output_json):
+def scan_source(source_dir, output_json, log_fn=print, progress_every=10):
     """扫描源盘（使用盘），生成映射表"""
     mapping = {}
-    print(f"[*] 正在扫描源目录: {source_dir}")
+    if log_fn is None:
+        log_fn = print
+    log_fn(f"[*] 正在扫描源目录: {source_dir}")
     start_time = time.time()
     count = 0
 
@@ -52,26 +54,30 @@ def scan_source(source_dir, output_json):
             if f_hash:
                 mapping[f_hash] = rel_path
                 count += 1
-                if count % 10 == 0:
-                    print(f" 已处理 {count} 个文件...", end='\r')
+                if progress_every and count % progress_every == 0:
+                    log_fn(f" 已处理 {count} 个文件...")
 
     with open(output_json, 'w', encoding='utf-8') as f:
         json.dump(mapping, f, ensure_ascii=False, indent=4)
     
     end_time = time.time()
-    print(f"\n[OK] 扫描完成！共 {count} 个文件，耗时 {end_time - start_time:.2f}s")
-    print(f"[OK] 映射表已保存至: {output_json}")
+    log_fn(f"[OK] 扫描完成！共 {count} 个文件，耗时 {end_time - start_time:.2f}s")
+    log_fn(f"[OK] 映射表已保存至: {output_json}")
 
-def sync_target(target_dir, mapping_json, dry_run=False):
+def sync_target(target_dir, mapping_json, dry_run=False, log_fn=print):
     """根据映射表整理目标盘（备份盘）"""
     if not os.path.exists(mapping_json):
-        print(f"[错误] 找不到映射表文件: {mapping_json}")
+        if log_fn is None:
+            log_fn = print
+        log_fn(f"[错误] 找不到映射表文件: {mapping_json}")
         return
 
     with open(mapping_json, 'r', encoding='utf-8') as f:
         mapping = json.load(f)
 
-    print(f"[*] 正在索引目标目录 (此过程可能较慢): {target_dir}")
+    if log_fn is None:
+        log_fn = print
+    log_fn(f"[*] 正在索引目标目录 (此过程可能较慢): {target_dir}")
     target_index = {}
     for root, _, files in os.walk(target_dir):
         for file in files:
@@ -80,9 +86,9 @@ def sync_target(target_dir, mapping_json, dry_run=False):
             if f_hash:
                 target_index[f_hash] = full_path
 
-    print(f"[*] 开始匹配与结构重组...")
+    log_fn(f"[*] 开始匹配与结构重组...")
     if dry_run:
-        print("注意：当前处于 [预览模式]，不会实际移动文件。")
+        log_fn("注意：当前处于 [预览模式]，不会实际移动文件。")
 
     moved_count = 0
     for f_hash, rel_path in mapping.items():
@@ -97,19 +103,19 @@ def sync_target(target_dir, mapping_json, dry_run=False):
                 os.makedirs(os.path.dirname(new_path), exist_ok=True)
                 shutil.move(old_path, new_path)
             
-            print(f"[{'预览' if dry_run else '移动'}] {os.path.basename(old_path)} -> {rel_path}")
+            log_fn(f"[{'预览' if dry_run else '移动'}] {os.path.basename(old_path)} -> {rel_path}")
             moved_count += 1
 
     # 清理空文件夹
     if not dry_run:
-        print("[*] 正在清理空文件夹...")
+        log_fn("[*] 正在清理空文件夹...")
         for root, dirs, _ in os.walk(target_dir, topdown=False):
             for d in dirs:
                 dir_path = os.path.join(root, d)
                 if not os.listdir(dir_path):
                     os.rmdir(dir_path)
 
-    print(f"\n[OK] 整理完成！共处理 {moved_count} 个文件。")
+    log_fn(f"[OK] 整理完成！共处理 {moved_count} 个文件。")
 
 def main():
     parser = argparse.ArgumentParser(description="File-Structure-Sync: 基于指纹的文件结构同步工具")

@@ -69,6 +69,44 @@ python run.py sync --dst <目标目录路径>
 python run.py sync --dst <目标目录路径> --dry-run
 ```
 
+## 🪟 图形界面（PySide6）
+
+安装依赖：
+
+```bash
+pip install PySide6
+```
+
+启动 GUI：
+
+```bash
+python gui.py
+```
+
+GUI 中可选择模式（scan/sync）、源目录/目标目录、映射文件路径，并在日志区查看执行输出。
+
+## 🧰 Windows 打包（单文件 exe）
+
+安装打包依赖：
+
+```bash
+pip install pyinstaller
+```
+
+运行打包脚本：
+
+```powershell
+.\build.ps1
+```
+
+可选指定图标：
+
+```powershell
+.\build.ps1 -IconPath .\assets\app.ico
+```
+
+输出文件位于 `dist\File-Structure-Sync.exe`。
+
 ## 🛠 技术细节：采样哈希
 
 为了兼顾性能与唯一性，本项目默认采用以下算法计算指纹：
