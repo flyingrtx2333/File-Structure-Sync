@@ -124,8 +124,10 @@ $$Hash = MD5(Header_{1MB} + Middle_{1MB} + Footer_{1MB} + FileSize)$$
 
 本项目采用 MIT License 许可。你可以自由地使用、修改和分发。
 
-## 💡 建议添加的后续功能 (Roadmap)
+## 🧾 Release Notes
 
-- [x] 添加 Dry Run 预览模式，不实际移动文件，仅输出操作清单。
-- [x] 支持命令行参数传入路径，无需修改源码。
-- [ ] 增加多线程扫描，进一步提升机械硬盘组的索引速度。
+### v1.0.0
+
+- 新增 PySide6 图形界面，支持 scan/sync/dry-run 操作流程
+- 提供 Windows 单文件 exe 打包脚本（PyInstaller）
+- 保留并增强 CLI 使用方式，日志输出可复用
